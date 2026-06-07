@@ -13,12 +13,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@xyflow/react": "^12.11.0",
     "cytoscape": "^3.34.0",
     "cytoscape-dagre": "^4.0.0",
-    "d3": "^7.9.0",
-    "d3-dag": "^1.2.1",
-    "dagre": "^0.8.5",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
@@ -29,8 +25,6 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/cytoscape": "^3.31.0",
     "@types/cytoscape-dagre": "^2.3.4",
-    "@types/d3": "^7.4.3",
-    "@types/dagre": "^0.7.54",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
