@@ -7,6 +7,17 @@
   font-family: system-ui, sans-serif;
 }
 
+.app-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #0d1117;
+  color: #8b949e;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
