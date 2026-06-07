@@ -54,6 +54,7 @@ export function GraphView(props: GraphViewProps) {
         id: `${edge.from}->${edge.to}:${edge.type}`,
         source: edge.from,
         target: edge.to,
+        type: edge.type,
       },
     }))
 
@@ -112,6 +113,15 @@ export function GraphView(props: GraphViewProps) {
             'curve-style': 'bezier',
           },
         },
+        {
+          selector: 'edge.hovered',
+          style: {
+            width: 3,
+            'line-color': '#58a6ff',
+            'target-arrow-color': '#58a6ff',
+            'z-index': 10,
+          },
+        },
       ],
     })
 
@@ -136,6 +146,26 @@ export function GraphView(props: GraphViewProps) {
       tip.style.display = 'block'
     })
     cy.on('mouseout', 'node', () => {
+      const tip = tooltipRef.current
+      if (tip !== null) {
+        tip.style.display = 'none'
+      }
+    })
+
+    cy.on('mouseover', 'edge', (evt) => {
+      evt.target.addClass('hovered')
+      const tip = tooltipRef.current
+      if (tip === null) {
+        return
+      }
+      tip.textContent = evt.target.data('type')
+      const pos = evt.target.renderedMidpoint()
+      tip.style.left = `${pos.x}px`
+      tip.style.top = `${pos.y}px`
+      tip.style.display = 'block'
+    })
+    cy.on('mouseout', 'edge', (evt) => {
+      evt.target.removeClass('hovered')
       const tip = tooltipRef.current
       if (tip !== null) {
         tip.style.display = 'none'
