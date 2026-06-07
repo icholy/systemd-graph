@@ -3,13 +3,14 @@ import cytoscape from 'cytoscape'
 import dagre from 'cytoscape-dagre'
 import type { DagreLayoutOptions } from 'cytoscape-dagre'
 import type { GraphViewProps } from '../types'
-import { nodeColor } from '../../data/select'
+import { nodeColor, nodeShape, unitLabel } from '../../data/select'
 
 cytoscape.use(dagre)
 
 export function CytoscapeView(props: GraphViewProps) {
   const { graph, selected } = props
   const containerRef = useRef<HTMLDivElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
   const lastFocusRef = useRef<string | null>(null)
 
@@ -30,8 +31,10 @@ export function CytoscapeView(props: GraphViewProps) {
       group: 'nodes',
       data: {
         id: unit.name,
-        label: unit.name,
+        label: unitLabel(unit),
+        full: unit.name,
         color: nodeColor(unit.activeState),
+        shape: nodeShape(unit.type),
       },
     }))
 
@@ -58,10 +61,21 @@ export function CytoscapeView(props: GraphViewProps) {
             'text-valign': 'center',
             'text-halign': 'right',
             'text-margin-x': 4,
-            width: 14,
-            height: 14,
+            'text-wrap': 'ellipsis',
+            'text-max-width': '160px',
+            width: 16,
+            height: 16,
           },
         },
+        { selector: 'node[shape = "round-rectangle"]', style: { shape: 'round-rectangle' } },
+        { selector: 'node[shape = "tag"]', style: { shape: 'tag' } },
+        { selector: 'node[shape = "diamond"]', style: { shape: 'diamond' } },
+        { selector: 'node[shape = "hexagon"]', style: { shape: 'hexagon' } },
+        { selector: 'node[shape = "rhomboid"]', style: { shape: 'rhomboid' } },
+        { selector: 'node[shape = "star"]', style: { shape: 'star' } },
+        { selector: 'node[shape = "vee"]', style: { shape: 'vee' } },
+        { selector: 'node[shape = "barrel"]', style: { shape: 'barrel' } },
+        { selector: 'node[shape = "pentagon"]', style: { shape: 'pentagon' } },
         {
           selector: 'node.focused',
           style: {
@@ -94,9 +108,29 @@ export function CytoscapeView(props: GraphViewProps) {
       }
     })
 
+    cy.on('mouseover', 'node', (evt) => {
+      const tip = tooltipRef.current
+      if (tip === null) {
+        return
+      }
+      tip.textContent = evt.target.data('full')
+      const pos = evt.target.renderedPosition()
+      tip.style.left = `${pos.x}px`
+      tip.style.top = `${pos.y}px`
+      tip.style.display = 'block'
+    })
+    cy.on('mouseout', 'node', () => {
+      const tip = tooltipRef.current
+      if (tip !== null) {
+        tip.style.display = 'none'
+      }
+    })
+
     const layout: DagreLayoutOptions = {
       name: 'dagre',
       rankDir: 'LR',
+      nodeSep: 40,
+      rankSep: 120,
       fit: true,
     }
     cy.layout(layout).run()
@@ -132,5 +166,10 @@ export function CytoscapeView(props: GraphViewProps) {
     }
   }, [selected, graph])
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+  return (
+    <div className="cy-wrap">
+      <div ref={containerRef} className="cy-canvas" />
+      <div ref={tooltipRef} className="cy-tooltip" />
+    </div>
+  )
 }

@@ -100,6 +100,52 @@ export function neighborhood(
   return { units, edges }
 }
 
+// unitLabel is the short, in-graph label. Device units have long,
+// machine-generated path names, so we prefer their description (or the
+// trailing path segment) and keep the full name for tooltips.
+export function unitLabel(unit: Unit): string {
+  if (unit.type !== 'device') {
+    return unit.name
+  }
+  if (unit.description !== '') {
+    return unit.description
+  }
+  const base = unit.name.replace(/\.device$/, '')
+  const parts = base.split('-')
+  return `${parts[parts.length - 1]}.device`
+}
+
+// nodeShape maps a unit type to a cytoscape node shape so types are
+// distinguishable at a glance (color stays reserved for active state).
+export function nodeShape(type: string): string {
+  switch (type) {
+    case 'service':
+      return 'ellipse'
+    case 'target':
+      return 'round-rectangle'
+    case 'socket':
+      return 'tag'
+    case 'device':
+      return 'diamond'
+    case 'mount':
+      return 'hexagon'
+    case 'automount':
+      return 'hexagon'
+    case 'swap':
+      return 'rhomboid'
+    case 'timer':
+      return 'star'
+    case 'path':
+      return 'vee'
+    case 'slice':
+      return 'barrel'
+    case 'scope':
+      return 'pentagon'
+    default:
+      return 'ellipse'
+  }
+}
+
 // nodeColor maps a unit's activeState to a fill color, shared across all
 // rendering experiments so they're visually comparable.
 export function nodeColor(activeState: string): string {

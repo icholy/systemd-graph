@@ -1,7 +1,8 @@
 import { useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Unit } from '../data/types'
-import { nodeColor } from '../data/select'
+import { nodeColor, nodeShape } from '../data/select'
+import { ShapeIcon } from './ShapeIcon'
 
 const ROW_HEIGHT = 26
 
@@ -39,9 +40,9 @@ export function UnitList({ units, selected, onSelect }: UnitListProps) {
               title={`${unit.name} (${unit.activeState})`}
               onClick={() => onSelect(unit.name)}
             >
-              <span
-                className="dot"
-                style={{ background: nodeColor(unit.activeState) }}
+              <ShapeIcon
+                shape={nodeShape(unit.type)}
+                color={nodeColor(unit.activeState)}
               />
               <span className="name">{unit.name}</span>
             </div>
