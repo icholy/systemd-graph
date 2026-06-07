@@ -7,6 +7,7 @@ import {
 } from './data/select'
 import type { EdgeType, Graph, Unit } from './data/types'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
+import { useUrlParam } from './hooks/useUrlParam'
 import { UnitList } from './components/UnitList'
 import { TypeFilter } from './components/TypeFilter'
 import { ScopeFilter } from './components/ScopeFilter'
@@ -88,7 +89,7 @@ export function Explorer({ full, refreshing, onRefresh }: ExplorerProps) {
   }, [full])
 
   const [query, setQuery] = useState('')
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useUrlParam('unit')
   const [unitTypes, setUnitTypes] = useState<Set<string>>(
     () => new Set(typeCounts.keys()),
   )
