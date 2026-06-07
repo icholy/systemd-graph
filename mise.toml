@@ -5,3 +5,34 @@ pin=true
 go = "1.26.3"
 node = "24.16.0"
 pnpm = "10.33.0"
+
+[tasks.ui]
+description = "Build the web UI (Vite) into webui/dist"
+dir = "webui"
+run = "pnpm install && pnpm build"
+
+[tasks.build]
+description = "Build the server binary (placeholder webui/dist if the UI isn't built)"
+run = '''
+if [ ! -d webui/dist ]; then
+  echo "webui/dist missing; writing placeholder (run 'mise run ui' for the real UI)"
+  mkdir -p webui/dist
+  printf '%s' '<!doctype html><meta charset="utf-8"><title>systemd-graph</title>UI not built. Run: mise run ui' > webui/dist/index.html
+fi
+go build -o bin/server ./cmd/server
+'''
+
+[tasks.dist]
+description = "Build the UI then the server binary"
+depends = ["ui"]
+run = "go build -o bin/server ./cmd/server"
+
+[tasks.dev]
+description = "Build the UI + server, then run the server"
+depends = ["ui"]
+run = "go build -o bin/server ./cmd/server && ./bin/server"
+
+[tasks."dev:ui"]
+description = "Run the Vite dev server (HMR), proxying /api to the backend"
+dir = "webui"
+run = "pnpm install && pnpm dev"
