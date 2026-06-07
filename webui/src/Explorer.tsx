@@ -4,6 +4,7 @@ import {
   subgraphByIds,
   neighborhood,
   allEdgeTypes,
+  displayName,
 } from './data/select'
 import type { EdgeType, Graph, Unit } from './data/types'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
@@ -242,7 +243,10 @@ export function Explorer({ full, refreshing, onRefresh }: ExplorerProps) {
           incoming={incoming}
           depTypes={depTypes}
           dependentTypes={dependentTypes}
-          resolveName={(id) => unitsById.get(id)?.name ?? id}
+          resolveName={(id) => {
+            const u = unitsById.get(id)
+            return u ? displayName(u) : id
+          }}
           onToggleDepType={(type) => toggleInSet(setDepTypes, type)}
           onToggleDependentType={(type) => toggleInSet(setDependentTypes, type)}
           onAllDepTypes={(types) => addToSet(setDepTypes, types)}

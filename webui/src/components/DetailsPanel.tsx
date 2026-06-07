@@ -1,5 +1,5 @@
 import type { Unit, Edge, EdgeType } from '../data/types'
-import { nodeColor } from '../data/select'
+import { displayName, nodeColor } from '../data/select'
 
 type DetailsPanelProps = {
   unit: Unit
@@ -108,7 +108,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
   return (
     <aside className="details">
       <header className="details-header">
-        <span className="details-title">{unit.name}</span>
+        <span className="details-title">{displayName(unit)}</span>
         <button
           type="button"
           className="details-close"

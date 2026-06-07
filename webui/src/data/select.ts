@@ -56,7 +56,11 @@ export function matchUnits(units: Unit[], query: string): Unit[] {
   if (q === '') {
     return units
   }
-  return units.filter((u) => u.name.toLowerCase().includes(q))
+  return units.filter(
+    (u) =>
+      u.name.toLowerCase().includes(q) ||
+      displayName(u).toLowerCase().includes(q),
+  )
 }
 
 // subgraphByIds keeps only the identified units and the edges (of the
@@ -100,17 +104,51 @@ export function neighborhood(
   return { units, edges }
 }
 
+// Unit types whose names are escaped filesystem/device paths ('-' is a
+// path separator; literal '-' is escaped as \x2d).
+const pathTypes: ReadonlySet<string> = new Set([
+  'device',
+  'mount',
+  'swap',
+  'automount',
+])
+
+// unescapeHex reverses systemd's \xNN escaping (e.g. \x2d -> '-').
+function unescapeHex(s: string): string {
+  return s.replace(/\\x([0-9a-fA-F]{2})/g, (_, hex: string) =>
+    String.fromCharCode(parseInt(hex, 16)),
+  )
+}
+
+// displayName is the human-readable form of a unit name. For path-derived
+// types it reconstructs the real path; for everything else it just
+// unescapes \xNN. The raw unit.name stays the canonical id.
+export function displayName(unit: Unit): string {
+  if (!pathTypes.has(unit.type)) {
+    return unescapeHex(unit.name)
+  }
+  const suffix = `.${unit.type}`
+  const base = unit.name.endsWith(suffix)
+    ? unit.name.slice(0, -suffix.length)
+    : unit.name
+  if (base === '-') {
+    return '/' // the root mount
+  }
+  // Split on path separators first, then unescape each segment, so an
+  // escaped literal '-' isn't mistaken for a separator.
+  return `/${base.split('-').map(unescapeHex).join('/')}`
+}
+
 // unitLabel is the short, in-graph label. Device units have long,
-// machine-generated names (and their descriptions are just the sysfs
-// path), so we use the trailing path segment and keep the full name for
-// tooltips.
+// machine-generated names, so we use the trailing path segment; the full
+// (unescaped) name is shown in tooltips.
 export function unitLabel(unit: Unit): string {
   if (unit.type !== 'device') {
-    return unit.name
+    return unescapeHex(unit.name)
   }
   const base = unit.name.replace(/\.device$/, '')
   const parts = base.split('-')
-  return `${parts[parts.length - 1]}.device`
+  return `${unescapeHex(parts[parts.length - 1])}.device`
 }
 
 // nodeShape maps a unit type to a cytoscape node shape so types are

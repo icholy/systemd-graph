@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Unit } from '../data/types'
-import { nodeColor, nodeShape } from '../data/select'
+import { displayName, nodeColor, nodeShape } from '../data/select'
 import { ShapeIcon } from './ShapeIcon'
 
 const ROW_HEIGHT = 26
@@ -37,14 +37,14 @@ export function UnitList({ units, selected, onSelect }: UnitListProps) {
               key={unit.id}
               className={className}
               style={{ height: item.size, transform: `translateY(${item.start}px)` }}
-              title={`${unit.name} (${unit.scope}, ${unit.activeState})`}
+              title={`${displayName(unit)} (${unit.scope}, ${unit.activeState})`}
               onClick={() => onSelect(unit.id)}
             >
               <ShapeIcon
                 shape={nodeShape(unit.type)}
                 color={nodeColor(unit.activeState)}
               />
-              <span className="name">{unit.name}</span>
+              <span className="name">{displayName(unit)}</span>
               {unit.scope === 'user' ? (
                 <span className="scope-tag">user</span>
               ) : null}
