@@ -336,8 +336,10 @@
   cursor: pointer;
 }
 
-.rel-group.off ul {
-  opacity: 0.4;
+.rel-type-count {
+  margin-left: auto;
+  color: #8b949e;
+  font-size: 11px;
 }
 
 .rel-group ul {

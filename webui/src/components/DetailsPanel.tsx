@@ -76,20 +76,23 @@ function Relations(props: {
                 onChange={() => props.onToggleEdgeType(type)}
               />
               {type}
+              <span className="rel-type-count">{ids.length}</span>
             </label>
-            <ul>
-              {ids.map((id) => (
-                <li key={id}>
-                  <button
-                    type="button"
-                    className="rel-link"
-                    onClick={() => props.onSelect(id)}
-                  >
-                    {props.resolveName(id)}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            {on ? (
+              <ul>
+                {ids.map((id) => (
+                  <li key={id}>
+                    <button
+                      type="button"
+                      className="rel-link"
+                      onClick={() => props.onSelect(id)}
+                    >
+                      {props.resolveName(id)}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         )
       })}
