@@ -86,7 +86,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
           onClick={props.onClose}
           aria-label="Close"
         >
-          x
+          ×
         </button>
       </header>
 

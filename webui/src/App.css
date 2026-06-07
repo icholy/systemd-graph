@@ -196,14 +196,23 @@
 .details-close {
   margin-left: auto;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #21262d;
-  color: #c9d1d9;
+  color: #8b949e;
   border: 1px solid #30363d;
   border-radius: 6px;
   width: 24px;
   height: 24px;
-  cursor: pointer;
+  font-size: 16px;
   line-height: 1;
+  cursor: pointer;
+}
+
+.details-close:hover {
+  color: #c9d1d9;
+  background: #30363d;
 }
 
 .details-fields {
