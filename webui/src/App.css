@@ -60,8 +60,17 @@
   font-family: ui-monospace, Consolas, monospace;
 }
 
+.unit-row {
+  cursor: pointer;
+}
+
 .unit-row:hover {
   background: #161b22;
+}
+
+.unit-row.selected {
+  background: #1f6feb33;
+  box-shadow: inset 2px 0 0 #58a6ff;
 }
 
 .unit-row .dot {

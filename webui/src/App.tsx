@@ -10,6 +10,7 @@ import './App.css'
 function App() {
   const full = useMemo(() => parseGraph(snapshot), [])
   const [query, setQuery] = useState('')
+  const [selected, setSelected] = useState<string | null>(null)
   const debouncedQuery = useDebouncedValue(query, 200)
 
   // List tracks the query immediately; the graph follows the debounced
@@ -34,10 +35,10 @@ function App() {
         <div className="list-meta">
           {listed.length} / {full.units.length} units
         </div>
-        <UnitList units={listed} />
+        <UnitList units={listed} selected={selected} onSelect={setSelected} />
       </aside>
       <main className="canvas">
-        <CytoscapeView graph={graph} />
+        <CytoscapeView graph={graph} selected={selected} onSelect={setSelected} />
       </main>
     </div>
   )

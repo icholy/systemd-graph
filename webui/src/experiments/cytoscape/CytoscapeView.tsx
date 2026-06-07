@@ -8,8 +8,16 @@ import { nodeColor } from '../../data/select'
 cytoscape.use(dagre)
 
 export function CytoscapeView(props: GraphViewProps) {
-  const { graph } = props
+  const { graph, selected } = props
   const containerRef = useRef<HTMLDivElement>(null)
+  const cyRef = useRef<cytoscape.Core | null>(null)
+
+  // Keep the latest onSelect reachable from the tap handler without
+  // rebuilding the graph when it changes identity.
+  const onSelectRef = useRef(props.onSelect)
+  useEffect(() => {
+    onSelectRef.current = props.onSelect
+  }, [props.onSelect])
 
   useEffect(() => {
     const container = containerRef.current
@@ -54,6 +62,16 @@ export function CytoscapeView(props: GraphViewProps) {
           },
         },
         {
+          selector: 'node.focused',
+          style: {
+            'border-width': 3,
+            'border-color': '#58a6ff',
+            color: '#fff',
+            'font-size': 12,
+            'z-index': 10,
+          },
+        },
+        {
           selector: 'edge',
           style: {
             width: 1,
@@ -66,17 +84,47 @@ export function CytoscapeView(props: GraphViewProps) {
       ],
     })
 
+    cy.on('tap', 'node', (evt) => {
+      onSelectRef.current?.(evt.target.id())
+    })
+    cy.on('tap', (evt) => {
+      if (evt.target === cy) {
+        onSelectRef.current?.(null)
+      }
+    })
+
     const layout: DagreLayoutOptions = {
       name: 'dagre',
       rankDir: 'LR',
       fit: true,
     }
     cy.layout(layout).run()
+    cyRef.current = cy
 
     return () => {
       cy.destroy()
+      cyRef.current = null
     }
   }, [graph])
+
+  // Highlight and pan/zoom to the selected node when it changes (or after
+  // the graph rebuilds).
+  useEffect(() => {
+    const cy = cyRef.current
+    if (cy === null) {
+      return
+    }
+    cy.nodes().removeClass('focused')
+    if (selected === null || selected === undefined) {
+      return
+    }
+    const node = cy.getElementById(selected)
+    if (node.empty()) {
+      return
+    }
+    node.addClass('focused')
+    cy.animate({ center: { eles: node }, zoom: 2 }, { duration: 300 })
+  }, [selected, graph])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }
