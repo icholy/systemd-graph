@@ -2,12 +2,18 @@ import { useEffect, useRef } from 'react'
 import cytoscape from 'cytoscape'
 import dagre from 'cytoscape-dagre'
 import type { DagreLayoutOptions } from 'cytoscape-dagre'
-import type { GraphViewProps } from '../types'
-import { nodeColor, nodeShape, unitLabel } from '../../data/select'
+import type { Graph } from '../data/types'
+import { nodeColor, nodeShape, unitLabel } from '../data/select'
 
 cytoscape.use(dagre)
 
-export function CytoscapeView(props: GraphViewProps) {
+type GraphViewProps = {
+  graph: Graph
+  selected?: string | null
+  onSelect?: (name: string | null) => void
+}
+
+export function GraphView(props: GraphViewProps) {
   const { graph, selected } = props
   const containerRef = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)

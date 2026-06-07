@@ -144,8 +144,8 @@ export function nodeShape(type: string): string {
   }
 }
 
-// nodeColor maps a unit's activeState to a fill color, shared across all
-// rendering experiments so they're visually comparable.
+// nodeColor maps a unit's activeState to a fill color, shared by the
+// graph and the sidebar so they stay visually consistent.
 export function nodeColor(activeState: string): string {
   switch (activeState) {
     case 'active':

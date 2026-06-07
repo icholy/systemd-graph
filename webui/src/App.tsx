@@ -12,7 +12,7 @@ import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { UnitList } from './components/UnitList'
 import { TypeFilter } from './components/TypeFilter'
 import { DetailsPanel } from './components/DetailsPanel'
-import { CytoscapeView } from './experiments/cytoscape/CytoscapeView'
+import { GraphView } from './components/GraphView'
 import './App.css'
 
 function toggleInSet<T>(
@@ -121,7 +121,7 @@ function App() {
         <UnitList units={listed} selected={selected} onSelect={setSelected} />
       </aside>
       <main className="canvas">
-        <CytoscapeView graph={graph} selected={selected} onSelect={setSelected} />
+        <GraphView graph={graph} selected={selected} onSelect={setSelected} />
       </main>
       {selectedUnit !== null ? (
         <DetailsPanel
