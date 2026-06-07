@@ -10,6 +10,8 @@ type DetailsPanelProps = {
   resolveName: (id: string) => string
   onToggleDepType: (type: EdgeType) => void
   onToggleDependentType: (type: EdgeType) => void
+  onAllDepTypes: (types: EdgeType[]) => void
+  onAllDependentTypes: (types: EdgeType[]) => void
   onClearDepTypes: (types: EdgeType[]) => void
   onClearDependentTypes: (types: EdgeType[]) => void
   onSelect: (id: string) => void
@@ -35,6 +37,7 @@ function Relations(props: {
   edgeTypes: ReadonlySet<EdgeType>
   resolveName: (id: string) => string
   onToggleEdgeType: (type: EdgeType) => void
+  onAll: (types: EdgeType[]) => void
   onClear: (types: EdgeType[]) => void
   onSelect: (id: string) => void
 }) {
@@ -45,13 +48,22 @@ function Relations(props: {
     <section className="details-relations">
       <div className="filter-head">
         <h3>{props.title}</h3>
-        <button
-          type="button"
-          className="clear-link"
-          onClick={() => props.onClear([...props.groups.keys()])}
-        >
-          clear
-        </button>
+        <span className="filter-actions">
+          <button
+            type="button"
+            className="clear-link"
+            onClick={() => props.onAll([...props.groups.keys()])}
+          >
+            all
+          </button>
+          <button
+            type="button"
+            className="clear-link"
+            onClick={() => props.onClear([...props.groups.keys()])}
+          >
+            clear
+          </button>
+        </span>
       </div>
       {[...props.groups.entries()].map(([type, ids]) => {
         const on = props.edgeTypes.has(type)
@@ -130,6 +142,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
         edgeTypes={props.depTypes}
         resolveName={props.resolveName}
         onToggleEdgeType={props.onToggleDepType}
+        onAll={props.onAllDepTypes}
         onClear={props.onClearDepTypes}
         onSelect={props.onSelect}
       />
@@ -139,6 +152,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
         edgeTypes={props.dependentTypes}
         resolveName={props.resolveName}
         onToggleEdgeType={props.onToggleDependentType}
+        onAll={props.onAllDependentTypes}
         onClear={props.onClearDependentTypes}
         onSelect={props.onSelect}
       />

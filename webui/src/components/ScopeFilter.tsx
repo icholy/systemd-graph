@@ -3,6 +3,7 @@ type ScopeFilterProps = {
   counts: Map<string, number>
   enabled: ReadonlySet<string>
   onToggle: (scope: string) => void
+  onAll: () => void
   onClear: () => void
 }
 
@@ -11,9 +12,14 @@ export function ScopeFilter(props: ScopeFilterProps) {
     <div className="type-filter">
       <div className="filter-head">
         <h2 className="type-filter-title">Scope</h2>
-        <button type="button" className="clear-link" onClick={props.onClear}>
-          clear
-        </button>
+        <span className="filter-actions">
+          <button type="button" className="clear-link" onClick={props.onAll}>
+            all
+          </button>
+          <button type="button" className="clear-link" onClick={props.onClear}>
+            clear
+          </button>
+        </span>
       </div>
       {props.scopes.map((scope) => (
         <label
