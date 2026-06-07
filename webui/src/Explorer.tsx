@@ -203,13 +203,25 @@ export function Explorer({ full, refreshing, onRefresh }: ExplorerProps) {
           onAll={() => setUnitTypes(new Set(allTypes))}
           onClear={() => setUnitTypes(new Set())}
         />
-        <input
-          className="search"
-          type="text"
-          placeholder="Filter units..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="search-wrap">
+          <input
+            className="search"
+            type="text"
+            placeholder="Filter units..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {query !== '' ? (
+            <button
+              type="button"
+              className="search-clear"
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
         <div className="list-meta">
           {listed.length} / {full.units.length} units
         </div>
