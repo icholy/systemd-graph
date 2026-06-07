@@ -31,6 +31,19 @@ function toggleInSet<T>(
   })
 }
 
+function removeFromSet<T>(
+  setState: (updater: (prev: Set<T>) => Set<T>) => void,
+  values: T[],
+) {
+  setState((prev) => {
+    const next = new Set(prev)
+    for (const v of values) {
+      next.delete(v)
+    }
+    return next
+  })
+}
+
 function App() {
   const full = useMemo(() => parseGraph(snapshot), [])
 
@@ -136,12 +149,14 @@ function App() {
           counts={scopeCounts}
           enabled={scopes}
           onToggle={(scope) => toggleInSet(setScopes, scope)}
+          onClear={() => setScopes(new Set())}
         />
         <TypeFilter
           types={allTypes}
           counts={typeCounts}
           enabled={unitTypes}
           onToggle={(type) => toggleInSet(setUnitTypes, type)}
+          onClear={() => setUnitTypes(new Set())}
         />
         <input
           className="search"
@@ -185,6 +200,8 @@ function App() {
           resolveName={(id) => unitsById.get(id)?.name ?? id}
           onToggleDepType={(type) => toggleInSet(setDepTypes, type)}
           onToggleDependentType={(type) => toggleInSet(setDependentTypes, type)}
+          onClearDepTypes={(types) => removeFromSet(setDepTypes, types)}
+          onClearDependentTypes={(types) => removeFromSet(setDependentTypes, types)}
           onSelect={setSelected}
           onClose={() => setSelected(null)}
         />

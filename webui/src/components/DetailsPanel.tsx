@@ -10,6 +10,8 @@ type DetailsPanelProps = {
   resolveName: (id: string) => string
   onToggleDepType: (type: EdgeType) => void
   onToggleDependentType: (type: EdgeType) => void
+  onClearDepTypes: (types: EdgeType[]) => void
+  onClearDependentTypes: (types: EdgeType[]) => void
   onSelect: (id: string) => void
   onClose: () => void
 }
@@ -33,6 +35,7 @@ function Relations(props: {
   edgeTypes: ReadonlySet<EdgeType>
   resolveName: (id: string) => string
   onToggleEdgeType: (type: EdgeType) => void
+  onClear: (types: EdgeType[]) => void
   onSelect: (id: string) => void
 }) {
   if (props.groups.size === 0) {
@@ -40,7 +43,16 @@ function Relations(props: {
   }
   return (
     <section className="details-relations">
-      <h3>{props.title}</h3>
+      <div className="filter-head">
+        <h3>{props.title}</h3>
+        <button
+          type="button"
+          className="clear-link"
+          onClick={() => props.onClear([...props.groups.keys()])}
+        >
+          clear
+        </button>
+      </div>
       {[...props.groups.entries()].map(([type, ids]) => {
         const on = props.edgeTypes.has(type)
         return (
@@ -118,6 +130,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
         edgeTypes={props.depTypes}
         resolveName={props.resolveName}
         onToggleEdgeType={props.onToggleDepType}
+        onClear={props.onClearDepTypes}
         onSelect={props.onSelect}
       />
       <Relations
@@ -126,6 +139,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
         edgeTypes={props.dependentTypes}
         resolveName={props.resolveName}
         onToggleEdgeType={props.onToggleDependentType}
+        onClear={props.onClearDependentTypes}
         onSelect={props.onSelect}
       />
     </aside>

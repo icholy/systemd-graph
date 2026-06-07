@@ -47,6 +47,25 @@
   color: #8b949e;
 }
 
+.filter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.clear-link {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  color: #58a6ff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.clear-link:hover {
+  text-decoration: underline;
+}
+
 .type-row {
   display: flex;
   align-items: center;

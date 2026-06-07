@@ -10,12 +10,18 @@ type TypeFilterProps = {
   counts: Map<string, number>
   enabled: ReadonlySet<string>
   onToggle: (type: string) => void
+  onClear: () => void
 }
 
 export function TypeFilter(props: TypeFilterProps) {
   return (
     <div className="type-filter">
-      <h2 className="type-filter-title">Types</h2>
+      <div className="filter-head">
+        <h2 className="type-filter-title">Types</h2>
+        <button type="button" className="clear-link" onClick={props.onClear}>
+          clear
+        </button>
+      </div>
       {props.types.map((type) => (
         <label
           key={type}
