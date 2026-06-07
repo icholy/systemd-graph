@@ -1,2 +1,7 @@
 [settings]
 pin=true
+
+[tools]
+go = "1.26.3"
+node = "24.16.0"
+pnpm = "10.33.0"
