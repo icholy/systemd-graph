@@ -60,6 +60,25 @@ export function subgraphByNames(
   return { units, edges }
 }
 
+// neighborhood returns the named unit plus every unit directly connected
+// to it (by any edge type), and the induced edges among that set.
+export function neighborhood(graph: Graph, name: string): Graph {
+  const names = new Set<string>([name])
+  for (const e of graph.edges) {
+    if (e.from === name) {
+      names.add(e.to)
+    }
+    if (e.to === name) {
+      names.add(e.from)
+    }
+  }
+  const units = graph.units.filter((u) => names.has(u.name))
+  const edges = graph.edges.filter(
+    (e) => names.has(e.from) && names.has(e.to),
+  )
+  return { units, edges }
+}
+
 // nodeColor maps a unit's activeState to a fill color, shared across all
 // rendering experiments so they're visually comparable.
 export function nodeColor(activeState: string): string {

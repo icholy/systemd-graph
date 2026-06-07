@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import snapshot from './data/snapshot.json'
 import { parseGraph } from './data/graph'
-import { matchUnits, subgraphByNames } from './data/select'
+import { matchUnits, subgraphByNames, neighborhood } from './data/select'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { UnitList } from './components/UnitList'
 import { DetailsPanel } from './components/DetailsPanel'
@@ -17,11 +17,17 @@ function App() {
   // List tracks the query immediately; the graph follows the debounced
   // query so typing stays smooth through the expensive relayout.
   const listed = useMemo(() => matchUnits(full.units, query), [full, query])
+
+  // A selection narrows the graph to that unit's neighborhood; otherwise
+  // it follows the (debounced) search.
   const graph = useMemo(() => {
+    if (selected !== null) {
+      return neighborhood(full, selected)
+    }
     const matched = matchUnits(full.units, debouncedQuery)
     const names = new Set(matched.map((u) => u.name))
     return subgraphByNames(full, names)
-  }, [full, debouncedQuery])
+  }, [full, selected, debouncedQuery])
 
   // Details come from the full graph so they stay complete even when the
   // view is filtered down.
