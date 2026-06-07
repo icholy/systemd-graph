@@ -1,10 +1,14 @@
-import type { Unit, Edge } from '../data/types'
+import type { Unit, Edge, EdgeType } from '../data/types'
 import { nodeColor } from '../data/select'
 
 type DetailsPanelProps = {
   unit: Unit
   outgoing: Edge[]
   incoming: Edge[]
+  depTypes: ReadonlySet<EdgeType>
+  dependentTypes: ReadonlySet<EdgeType>
+  onToggleDepType: (type: EdgeType) => void
+  onToggleDependentType: (type: EdgeType) => void
   onSelect: (name: string) => void
   onClose: () => void
 }
@@ -12,8 +16,8 @@ type DetailsPanelProps = {
 function groupByType(
   edges: Edge[],
   pick: (e: Edge) => string,
-): Map<string, string[]> {
-  const groups = new Map<string, string[]>()
+): Map<EdgeType, string[]> {
+  const groups = new Map<EdgeType, string[]>()
   for (const e of edges) {
     const list = groups.get(e.type) ?? []
     list.push(pick(e))
@@ -24,7 +28,9 @@ function groupByType(
 
 function Relations(props: {
   title: string
-  groups: Map<string, string[]>
+  groups: Map<EdgeType, string[]>
+  edgeTypes: ReadonlySet<EdgeType>
+  onToggleEdgeType: (type: EdgeType) => void
   onSelect: (name: string) => void
 }) {
   if (props.groups.size === 0) {
@@ -33,24 +39,34 @@ function Relations(props: {
   return (
     <section className="details-relations">
       <h3>{props.title}</h3>
-      {[...props.groups.entries()].map(([type, names]) => (
-        <div key={type} className="rel-group">
-          <div className="rel-type">{type}</div>
-          <ul>
-            {names.map((name) => (
-              <li key={name}>
-                <button
-                  type="button"
-                  className="rel-link"
-                  onClick={() => props.onSelect(name)}
-                >
-                  {name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      {[...props.groups.entries()].map(([type, names]) => {
+        const on = props.edgeTypes.has(type)
+        return (
+          <div key={type} className={on ? 'rel-group' : 'rel-group off'}>
+            <label className="rel-type">
+              <input
+                type="checkbox"
+                checked={on}
+                onChange={() => props.onToggleEdgeType(type)}
+              />
+              {type}
+            </label>
+            <ul>
+              {names.map((name) => (
+                <li key={name}>
+                  <button
+                    type="button"
+                    className="rel-link"
+                    onClick={() => props.onSelect(name)}
+                  >
+                    {name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      })}
     </section>
   )
 }
@@ -92,8 +108,20 @@ export function DetailsPanel(props: DetailsPanelProps) {
         ) : null}
       </dl>
 
-      <Relations title="Dependencies" groups={deps} onSelect={props.onSelect} />
-      <Relations title="Dependents" groups={dependents} onSelect={props.onSelect} />
+      <Relations
+        title="Dependencies"
+        groups={deps}
+        edgeTypes={props.depTypes}
+        onToggleEdgeType={props.onToggleDepType}
+        onSelect={props.onSelect}
+      />
+      <Relations
+        title="Dependents"
+        groups={dependents}
+        edgeTypes={props.dependentTypes}
+        onToggleEdgeType={props.onToggleDependentType}
+        onSelect={props.onSelect}
+      />
     </aside>
   )
 }

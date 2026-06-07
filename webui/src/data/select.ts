@@ -1,4 +1,4 @@
-import type { Graph, Unit, EdgeType } from './types'
+import type { Graph, Unit, Edge, EdgeType } from './types'
 
 // Default view: the units people actually reason about, with requirement
 // edges only. Ordering (After) and Conflicts are excluded by default
@@ -8,6 +8,19 @@ export const defaultUnitTypes: ReadonlySet<string> = new Set([
   'target',
   'socket',
 ])
+
+export const allEdgeTypes: readonly EdgeType[] = [
+  'Requires',
+  'Requisite',
+  'Wants',
+  'BindsTo',
+  'PartOf',
+  'Upholds',
+  'Conflicts',
+  'After',
+  'OnFailure',
+  'OnSuccess',
+]
 
 export const defaultEdgeTypes: ReadonlySet<EdgeType> = new Set<EdgeType>([
   'Requires',
@@ -60,22 +73,30 @@ export function subgraphByNames(
   return { units, edges }
 }
 
-// neighborhood returns the named unit plus every unit directly connected
-// to it (by any edge type), and the induced edges among that set.
-export function neighborhood(graph: Graph, name: string): Graph {
+// neighborhood returns the named unit plus its directly connected
+// relatives: dependencies reached by an enabled outgoing edge type, and
+// dependents reached by an enabled incoming edge type. Only the edges
+// incident to the named unit (and enabled) are drawn, so each edge
+// corresponds to one of the panel toggles.
+export function neighborhood(
+  graph: Graph,
+  name: string,
+  outTypes: ReadonlySet<EdgeType> = new Set(allEdgeTypes),
+  inTypes: ReadonlySet<EdgeType> = new Set(allEdgeTypes),
+): Graph {
   const names = new Set<string>([name])
+  const edges: Edge[] = []
   for (const e of graph.edges) {
-    if (e.from === name) {
+    if (e.from === name && outTypes.has(e.type)) {
       names.add(e.to)
+      edges.push(e)
     }
-    if (e.to === name) {
+    if (e.to === name && inTypes.has(e.type)) {
       names.add(e.from)
+      edges.push(e)
     }
   }
   const units = graph.units.filter((u) => names.has(u.name))
-  const edges = graph.edges.filter(
-    (e) => names.has(e.from) && names.has(e.to),
-  )
   return { units, edges }
 }
 

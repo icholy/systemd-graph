@@ -173,9 +173,23 @@
 }
 
 .rel-type {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
-  color: #6e7681;
+  color: #8b949e;
   margin-bottom: 2px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rel-type input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.rel-group.off ul {
+  opacity: 0.4;
 }
 
 .rel-group ul {
