@@ -6,10 +6,13 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/godbus/dbus/v5"
 
 	"github.com/icholy/systemd-graph/internal/systemd"
 	"github.com/icholy/systemd-graph/webui"
@@ -17,7 +20,12 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":8080", "listen address")
+	watch := flag.Bool("watch", false, "log systemd D-Bus events to stderr")
 	flag.Parse()
+
+	if *watch {
+		startWatch()
+	}
 
 	dist, err := webui.Dist()
 	if err != nil {
@@ -32,6 +40,49 @@ func main() {
 	if err := http.ListenAndServe(*addr, mux); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// startWatch subscribes to the system and (best-effort) user managers and
+// logs every signal, for exploring what events systemd emits.
+func startWatch() {
+	if sys, err := systemd.ConnectSystem(); err != nil {
+		log.Printf("watch: system: %v", err)
+	} else if err := watchClient(sys); err != nil {
+		log.Printf("watch: system: %v", err)
+	}
+	if user, err := systemd.ConnectUser(); err != nil {
+		log.Printf("watch: user: %v", err)
+	} else if err := watchClient(user); err != nil {
+		log.Printf("watch: user: %v", err)
+	}
+}
+
+func watchClient(c *systemd.Client) error {
+	ch, err := c.Subscribe()
+	if err != nil {
+		return err
+	}
+	go func() {
+		for sig := range ch {
+			logSignal(c.Scope(), sig)
+		}
+	}()
+	return nil
+}
+
+func logSignal(scope string, sig *dbus.Signal) {
+	member := sig.Name[strings.LastIndex(sig.Name, ".")+1:]
+	if member == "PropertiesChanged" && len(sig.Body) >= 2 {
+		iface, _ := sig.Body[0].(string)
+		changed, _ := sig.Body[1].(map[string]dbus.Variant)
+		parts := make([]string, 0, len(changed))
+		for k, v := range changed {
+			parts = append(parts, fmt.Sprintf("%s=%v", k, v.Value()))
+		}
+		log.Printf("[%s] PropertiesChanged %s %s {%s}", scope, sig.Path, iface, strings.Join(parts, ", "))
+		return
+	}
+	log.Printf("[%s] %s %v", scope, member, sig.Body)
 }
 
 // handleSnapshot computes a fresh snapshot on each request, gzipping the
