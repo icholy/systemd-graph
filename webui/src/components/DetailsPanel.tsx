@@ -1,5 +1,6 @@
 import type { Unit, Edge, EdgeType } from '../data/types'
 import { displayName, nodeColor } from '../data/select'
+import { LiveDetails } from './LiveDetails'
 
 type DetailsPanelProps = {
   unit: Unit
@@ -138,6 +139,8 @@ export function DetailsPanel(props: DetailsPanelProps) {
           </>
         ) : null}
       </dl>
+
+      <LiveDetails scope={unit.scope} name={unit.name} />
 
       <Relations
         title="Dependencies"

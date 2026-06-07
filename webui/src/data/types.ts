@@ -33,3 +33,18 @@ export type Edge = {
   to: string
   type: EdgeType
 }
+
+// Rich, on-demand details for a single unit (GET /api/unit/...).
+export type UnitDetails = {
+  fragmentPath?: string
+  documentation?: string[]
+  activeEnterUSec?: number
+  triggers?: string[]
+  triggeredBy?: string[]
+  mainPID?: number
+  execStart?: string
+  memoryCurrent?: number
+  cpuUsageNSec?: number
+  nRestarts?: number
+  result?: string
+}

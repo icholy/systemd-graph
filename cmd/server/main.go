@@ -26,16 +26,21 @@ func main() {
 
 	store := systemd.NewStore()
 	ctx := context.Background()
+	clients := map[string]*systemd.Client{}
 
 	if sys, err := systemd.ConnectSystem(); err != nil {
 		log.Fatalf("system bus: %v", err)
 	} else if err := sys.Run(ctx, store); err != nil {
 		log.Fatalf("system watch: %v", err)
+	} else {
+		clients["system"] = sys
 	}
 	if user, err := systemd.ConnectUser(); err != nil {
 		log.Printf("skipping user units: %v", err)
 	} else if err := user.Run(ctx, store); err != nil {
 		log.Printf("user watch: %v", err)
+	} else {
+		clients["user"] = user
 	}
 
 	dist, err := webui.Dist()
@@ -46,6 +51,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/snapshot", snapshotHandler(store))
 	mux.HandleFunc("GET /api/events", eventsHandler(store))
+	mux.HandleFunc("GET /api/unit/{scope}/{name}", unitHandler(clients))
 	mux.Handle("GET /", http.FileServerFS(dist))
 
 	log.Printf("listening on %s", *addr)
@@ -70,6 +76,26 @@ func snapshotHandler(store *systemd.Store) http.HandlerFunc {
 		}
 		if err := json.NewEncoder(out).Encode(graph); err != nil {
 			log.Printf("encoding snapshot: %v", err)
+		}
+	}
+}
+
+// unitHandler returns rich, live details for a single unit.
+func unitHandler(clients map[string]*systemd.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		client, ok := clients[r.PathValue("scope")]
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		details, err := client.Details(r.PathValue("name"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(details); err != nil {
+			log.Printf("encoding details: %v", err)
 		}
 	}
 }
