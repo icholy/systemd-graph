@@ -240,13 +240,30 @@ export function Explorer({ full, refreshing, onRefresh }: ExplorerProps) {
         </div>
       </aside>
       <main className="canvas">
-        <GraphView
-          graph={graph}
-          nodeLimit={nodeLimit}
-          fitKey={fitKey}
-          selected={selected}
-          onSelect={setSelected}
-        />
+        {selected !== null && selectedUnit === null ? (
+          <div className="canvas-message">
+            <div>
+              Unit not found: <code>{selected}</code>
+              <br />
+              It may have been removed.
+            </div>
+            <button
+              type="button"
+              className="clear-link"
+              onClick={() => setSelected(null)}
+            >
+              clear selection
+            </button>
+          </div>
+        ) : (
+          <GraphView
+            graph={graph}
+            nodeLimit={nodeLimit}
+            fitKey={fitKey}
+            selected={selected}
+            onSelect={setSelected}
+          />
+        )}
       </main>
       {selectedUnit !== null ? (
         <DetailsPanel

@@ -286,6 +286,26 @@
   pointer-events: none;
 }
 
+.canvas-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 40px;
+  color: #8b949e;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.canvas-message code {
+  color: #c9d1d9;
+  word-break: break-all;
+}
+
 .cy-tooltip {
   display: none;
   position: absolute;
