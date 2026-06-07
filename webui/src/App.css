@@ -87,6 +87,21 @@
   color: #8b949e;
 }
 
+.node-limit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border-top: 1px solid #30363d;
+  font-size: 11px;
+  color: #8b949e;
+}
+
+.node-limit input {
+  width: 100%;
+  cursor: pointer;
+}
+
 .unit-list {
   flex: 1;
   min-height: 0;
@@ -160,6 +175,19 @@
 .cy-canvas {
   width: 100%;
   height: 100%;
+}
+
+.cy-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 40px;
+  color: #8b949e;
+  font-size: 14px;
+  pointer-events: none;
 }
 
 .cy-tooltip {

@@ -9,12 +9,16 @@ cytoscape.use(dagre)
 
 type GraphViewProps = {
   graph: Graph
+  nodeLimit: number
   selected?: string | null
   onSelect?: (name: string | null) => void
 }
 
 export function GraphView(props: GraphViewProps) {
-  const { graph, selected } = props
+  const { graph, selected, nodeLimit } = props
+  // Past the limit the dagre layout blocks the main thread long enough to
+  // freeze the UI, so we refuse to render and ask the user to narrow down.
+  const tooMany = graph.units.length > nodeLimit
   const containerRef = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
@@ -29,7 +33,7 @@ export function GraphView(props: GraphViewProps) {
 
   useEffect(() => {
     const container = containerRef.current
-    if (container === null) {
+    if (container === null || tooMany) {
       return
     }
 
@@ -56,6 +60,12 @@ export function GraphView(props: GraphViewProps) {
     const cy = cytoscape({
       container,
       elements: [...nodes, ...edges],
+      // Viewport perf: render to a texture while panning/zooming, hide
+      // edges and tiny labels during interaction.
+      textureOnViewport: true,
+      hideEdgesOnViewport: true,
+      motionBlur: false,
+      pixelRatio: 1,
       style: [
         {
           selector: 'node',
@@ -146,7 +156,7 @@ export function GraphView(props: GraphViewProps) {
       cy.destroy()
       cyRef.current = null
     }
-  }, [graph])
+  }, [graph, tooMany])
 
   // Highlight the selected node. The class is re-applied on every graph
   // rebuild (a new cytoscape instance loses it), but we only pan/zoom when
@@ -176,6 +186,12 @@ export function GraphView(props: GraphViewProps) {
     <div className="cy-wrap">
       <div ref={containerRef} className="cy-canvas" />
       <div ref={tooltipRef} className="cy-tooltip" />
+      {tooMany ? (
+        <div className="cy-overlay">
+          {graph.units.length} units match. Refine the search or select a
+          unit to render the graph.
+        </div>
+      ) : null}
     </div>
   )
 }

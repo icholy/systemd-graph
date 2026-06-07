@@ -68,6 +68,7 @@ function App() {
   const [scopes, setScopes] = useState<Set<string>>(
     () => new Set(scopeCounts.keys()),
   )
+  const [nodeLimit, setNodeLimit] = useState(500)
   // Outgoing (dependency) and incoming (dependent) edge types are toggled
   // independently, so e.g. "After" can be on for dependencies and off for
   // dependents.
@@ -153,9 +154,26 @@ function App() {
           {listed.length} / {full.units.length} units
         </div>
         <UnitList units={listed} selected={selected} onSelect={setSelected} />
+        <div className="node-limit">
+          <label htmlFor="node-limit">Max graph nodes: {nodeLimit}</label>
+          <input
+            id="node-limit"
+            type="range"
+            min={100}
+            max={3000}
+            step={100}
+            value={nodeLimit}
+            onChange={(e) => setNodeLimit(Number(e.target.value))}
+          />
+        </div>
       </aside>
       <main className="canvas">
-        <GraphView graph={graph} selected={selected} onSelect={setSelected} />
+        <GraphView
+          graph={graph}
+          nodeLimit={nodeLimit}
+          selected={selected}
+          onSelect={setSelected}
+        />
       </main>
       {selectedUnit !== null ? (
         <DetailsPanel
