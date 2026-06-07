@@ -4,6 +4,7 @@ import { parseGraph } from './data/graph'
 import { matchUnits, subgraphByNames } from './data/select'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { UnitList } from './components/UnitList'
+import { DetailsPanel } from './components/DetailsPanel'
 import { CytoscapeView } from './experiments/cytoscape/CytoscapeView'
 import './App.css'
 
@@ -21,6 +22,24 @@ function App() {
     const names = new Set(matched.map((u) => u.name))
     return subgraphByNames(full, names)
   }, [full, debouncedQuery])
+
+  // Details come from the full graph so they stay complete even when the
+  // view is filtered down.
+  const selectedUnit = useMemo(
+    () =>
+      selected === null
+        ? null
+        : (full.units.find((u) => u.name === selected) ?? null),
+    [full, selected],
+  )
+  const outgoing = useMemo(
+    () => (selected === null ? [] : full.edges.filter((e) => e.from === selected)),
+    [full, selected],
+  )
+  const incoming = useMemo(
+    () => (selected === null ? [] : full.edges.filter((e) => e.to === selected)),
+    [full, selected],
+  )
 
   return (
     <div className="app">
@@ -40,6 +59,15 @@ function App() {
       <main className="canvas">
         <CytoscapeView graph={graph} selected={selected} onSelect={setSelected} />
       </main>
+      {selectedUnit !== null ? (
+        <DetailsPanel
+          unit={selectedUnit}
+          outgoing={outgoing}
+          incoming={incoming}
+          onSelect={setSelected}
+          onClose={() => setSelected(null)}
+        />
+      ) : null}
     </div>
   )
 }
