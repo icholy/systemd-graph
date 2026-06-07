@@ -102,6 +102,12 @@ function App() {
   return (
     <div className="app">
       <aside className="sidebar">
+        <TypeFilter
+          types={allTypes}
+          counts={typeCounts}
+          enabled={unitTypes}
+          onToggle={(type) => toggleInSet(setUnitTypes, type)}
+        />
         <input
           className="search"
           type="text"
@@ -113,12 +119,6 @@ function App() {
           {listed.length} / {full.units.length} units
         </div>
         <UnitList units={listed} selected={selected} onSelect={setSelected} />
-        <TypeFilter
-          types={allTypes}
-          counts={typeCounts}
-          enabled={unitTypes}
-          onToggle={(type) => toggleInSet(setUnitTypes, type)}
-        />
       </aside>
       <main className="canvas">
         <CytoscapeView graph={graph} selected={selected} onSelect={setSelected} />
