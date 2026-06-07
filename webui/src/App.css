@@ -135,6 +135,16 @@
   white-space: nowrap;
 }
 
+.unit-row .scope-tag {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #8b949e;
+  background: #21262d;
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
 .canvas {
   position: relative;
   flex: 1;

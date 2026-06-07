@@ -23,15 +23,29 @@ func main() {
 }
 
 func run(out string) error {
-	client, err := systemd.Connect()
+	sys, err := systemd.ConnectSystem()
 	if err != nil {
 		return err
 	}
-	defer client.Close()
+	defer sys.Close()
 
-	graph, err := client.Snapshot()
+	graph, err := sys.Snapshot()
 	if err != nil {
 		return err
+	}
+
+	// User units are best-effort: a session bus may not exist (e.g. when
+	// run headless or via sudo).
+	if user, err := systemd.ConnectUser(); err != nil {
+		fmt.Fprintln(os.Stderr, "warning: skipping user units:", err)
+	} else {
+		defer user.Close()
+		if ug, err := user.Snapshot(); err != nil {
+			fmt.Fprintln(os.Stderr, "warning: reading user units:", err)
+		} else {
+			graph.Units = append(graph.Units, ug.Units...)
+			graph.Edges = append(graph.Edges, ug.Edges...)
+		}
 	}
 
 	w := os.Stdout

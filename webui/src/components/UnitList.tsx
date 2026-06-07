@@ -9,7 +9,7 @@ const ROW_HEIGHT = 26
 type UnitListProps = {
   units: Unit[]
   selected: string | null
-  onSelect: (name: string) => void
+  onSelect: (id: string) => void
 }
 
 export function UnitList({ units, selected, onSelect }: UnitListProps) {
@@ -31,20 +31,23 @@ export function UnitList({ units, selected, onSelect }: UnitListProps) {
         {virtualizer.getVirtualItems().map((item) => {
           const unit = units[item.index]
           const className =
-            unit.name === selected ? 'unit-row selected' : 'unit-row'
+            unit.id === selected ? 'unit-row selected' : 'unit-row'
           return (
             <div
-              key={unit.name}
+              key={unit.id}
               className={className}
               style={{ height: item.size, transform: `translateY(${item.start}px)` }}
-              title={`${unit.name} (${unit.activeState})`}
-              onClick={() => onSelect(unit.name)}
+              title={`${unit.name} (${unit.scope}, ${unit.activeState})`}
+              onClick={() => onSelect(unit.id)}
             >
               <ShapeIcon
                 shape={nodeShape(unit.type)}
                 color={nodeColor(unit.activeState)}
               />
               <span className="name">{unit.name}</span>
+              {unit.scope === 'user' ? (
+                <span className="scope-tag">user</span>
+              ) : null}
             </div>
           )
         })}

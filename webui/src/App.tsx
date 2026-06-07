@@ -3,14 +3,15 @@ import snapshot from './data/snapshot.json'
 import { parseGraph } from './data/graph'
 import {
   matchUnits,
-  subgraphByNames,
+  subgraphByIds,
   neighborhood,
   allEdgeTypes,
 } from './data/select'
-import type { EdgeType } from './data/types'
+import type { EdgeType, Unit } from './data/types'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import { UnitList } from './components/UnitList'
 import { TypeFilter } from './components/TypeFilter'
+import { ScopeFilter } from './components/ScopeFilter'
 import { DetailsPanel } from './components/DetailsPanel'
 import { GraphView } from './components/GraphView'
 import './App.css'
@@ -42,10 +43,30 @@ function App() {
   }, [full])
   const allTypes = useMemo(() => [...typeCounts.keys()].sort(), [typeCounts])
 
+  const scopeCounts = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const u of full.units) {
+      m.set(u.scope, (m.get(u.scope) ?? 0) + 1)
+    }
+    return m
+  }, [full])
+  const allScopes = useMemo(() => [...scopeCounts.keys()].sort(), [scopeCounts])
+
+  const unitsById = useMemo(() => {
+    const m = new Map<string, Unit>()
+    for (const u of full.units) {
+      m.set(u.id, u)
+    }
+    return m
+  }, [full])
+
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const [unitTypes, setUnitTypes] = useState<Set<string>>(
     () => new Set(typeCounts.keys()),
+  )
+  const [scopes, setScopes] = useState<Set<string>>(
+    () => new Set(scopeCounts.keys()),
   )
   // Outgoing (dependency) and incoming (dependent) edge types are toggled
   // independently, so e.g. "After" can be on for dependencies and off for
@@ -63,32 +84,39 @@ function App() {
   // restricted to the enabled unit types.
   const listed = useMemo(
     () =>
-      matchUnits(full.units, query).filter((u) => unitTypes.has(u.type)),
-    [full, query, unitTypes],
+      matchUnits(full.units, query).filter(
+        (u) => unitTypes.has(u.type) && scopes.has(u.scope),
+      ),
+    [full, query, unitTypes, scopes],
   )
 
   // A selection narrows the graph to that unit's neighborhood (relatives
   // of any type); otherwise it follows the (debounced) search and the
-  // type filter.
+  // type/scope filters.
   const graph = useMemo(() => {
     if (selected !== null) {
       return neighborhood(full, selected, depTypes, dependentTypes)
     }
-    const matched = matchUnits(full.units, debouncedQuery).filter((u) =>
-      unitTypes.has(u.type),
+    const matched = matchUnits(full.units, debouncedQuery).filter(
+      (u) => unitTypes.has(u.type) && scopes.has(u.scope),
     )
-    const names = new Set(matched.map((u) => u.name))
-    return subgraphByNames(full, names)
-  }, [full, selected, depTypes, dependentTypes, debouncedQuery, unitTypes])
+    const ids = new Set(matched.map((u) => u.id))
+    return subgraphByIds(full, ids)
+  }, [
+    full,
+    selected,
+    depTypes,
+    dependentTypes,
+    debouncedQuery,
+    unitTypes,
+    scopes,
+  ])
 
   // Details come from the full graph so they stay complete even when the
   // view is filtered down.
   const selectedUnit = useMemo(
-    () =>
-      selected === null
-        ? null
-        : (full.units.find((u) => u.name === selected) ?? null),
-    [full, selected],
+    () => (selected === null ? null : (unitsById.get(selected) ?? null)),
+    [unitsById, selected],
   )
   const outgoing = useMemo(
     () => (selected === null ? [] : full.edges.filter((e) => e.from === selected)),
@@ -102,6 +130,12 @@ function App() {
   return (
     <div className="app">
       <aside className="sidebar">
+        <ScopeFilter
+          scopes={allScopes}
+          counts={scopeCounts}
+          enabled={scopes}
+          onToggle={(scope) => toggleInSet(setScopes, scope)}
+        />
         <TypeFilter
           types={allTypes}
           counts={typeCounts}
@@ -130,6 +164,7 @@ function App() {
           incoming={incoming}
           depTypes={depTypes}
           dependentTypes={dependentTypes}
+          resolveName={(id) => unitsById.get(id)?.name ?? id}
           onToggleDepType={(type) => toggleInSet(setDepTypes, type)}
           onToggleDependentType={(type) => toggleInSet(setDependentTypes, type)}
           onSelect={setSelected}

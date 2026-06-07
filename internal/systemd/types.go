@@ -7,9 +7,13 @@ type Graph struct {
 	Edges []Edge `json:"edges"`
 }
 
-// Unit is a single loaded systemd unit.
+// Unit is a single loaded systemd unit. ID is scope-qualified
+// ("system/foo.service") so system and user units with the same name
+// don't collide; Name is the plain unit name for display.
 type Unit struct {
+	ID          string `json:"id"`
 	Name        string `json:"name"`
+	Scope       string `json:"scope"`
 	Type        string `json:"type"`
 	Description string `json:"description"`
 	LoadState   string `json:"loadState"`
@@ -17,8 +21,9 @@ type Unit struct {
 	SubState    string `json:"subState"`
 }
 
-// Edge is a directed dependency from one unit to another. Type is the
-// systemd relationship name (e.g. "After", "Requires", "Wants").
+// Edge is a directed dependency from one unit to another, referencing
+// scope-qualified unit IDs. Type is the systemd relationship name
+// (e.g. "After", "Requires", "Wants").
 type Edge struct {
 	From string `json:"from"`
 	To   string `json:"to"`

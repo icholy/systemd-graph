@@ -36,7 +36,7 @@ export function GraphView(props: GraphViewProps) {
     const nodes: cytoscape.ElementDefinition[] = graph.units.map((unit) => ({
       group: 'nodes',
       data: {
-        id: unit.name,
+        id: unit.id,
         label: unitLabel(unit),
         full: unit.name,
         color: nodeColor(unit.activeState),

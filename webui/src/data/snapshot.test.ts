@@ -11,10 +11,16 @@ describe('snapshot', () => {
   })
 
   it('every edge references known units', () => {
-    const names = new Set(graph.units.map((u) => u.name))
+    const ids = new Set(graph.units.map((u) => u.id))
     for (const e of graph.edges) {
-      expect(names.has(e.from)).toBe(true)
-      expect(names.has(e.to)).toBe(true)
+      expect(ids.has(e.from)).toBe(true)
+      expect(ids.has(e.to)).toBe(true)
     }
+  })
+
+  it('includes both system and user units', () => {
+    const scopes = new Set(graph.units.map((u) => u.scope))
+    expect(scopes.has('system')).toBe(true)
+    expect(scopes.has('user')).toBe(true)
   })
 })

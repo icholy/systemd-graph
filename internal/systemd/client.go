@@ -34,18 +34,30 @@ var forwardDeps = []string{
 	"OnSuccess",
 }
 
-// Client talks to the systemd manager over D-Bus.
+// Client talks to a systemd manager (system or user) over D-Bus. scope
+// is the label ("system" or "user") used to qualify unit IDs.
 type Client struct {
-	conn *dbus.Conn
+	conn  *dbus.Conn
+	scope string
 }
 
-// Connect dials the system bus and returns a Client.
-func Connect() (*Client, error) {
+// ConnectSystem dials the system bus (the system systemd manager).
+func ConnectSystem() (*Client, error) {
 	conn, err := dbus.SystemBus()
 	if err != nil {
 		return nil, fmt.Errorf("connecting to system bus: %w", err)
 	}
-	return &Client{conn: conn}, nil
+	return &Client{conn: conn, scope: "system"}, nil
+}
+
+// ConnectUser dials the session bus (the per-user `systemd --user`
+// manager).
+func ConnectUser() (*Client, error) {
+	conn, err := dbus.SessionBus()
+	if err != nil {
+		return nil, fmt.Errorf("connecting to session bus: %w", err)
+	}
+	return &Client{conn: conn, scope: "user"}, nil
 }
 
 // Close releases the underlying bus connection.
@@ -85,7 +97,9 @@ func (c *Client) Snapshot() (*Graph, error) {
 	g := &Graph{}
 	for _, u := range listed {
 		g.Units = append(g.Units, Unit{
+			ID:          c.id(u.Name),
 			Name:        u.Name,
+			Scope:       c.scope,
 			Type:        unitType(u.Name),
 			Description: u.Description,
 			LoadState:   u.LoadState,
@@ -102,7 +116,7 @@ func (c *Client) Snapshot() (*Graph, error) {
 				if !known[to] {
 					continue
 				}
-				g.Edges = append(g.Edges, Edge{From: u.Name, To: to, Type: depType})
+				g.Edges = append(g.Edges, Edge{From: c.id(u.Name), To: c.id(to), Type: depType})
 			}
 		}
 	}
@@ -118,6 +132,11 @@ func (c *Client) Snapshot() (*Graph, error) {
 		return a.To < b.To
 	})
 	return g, nil
+}
+
+// id returns the scope-qualified unit ID (e.g. "system/foo.service").
+func (c *Client) id(name string) string {
+	return c.scope + "/" + name
 }
 
 func (c *Client) listUnits() ([]listedUnit, error) {

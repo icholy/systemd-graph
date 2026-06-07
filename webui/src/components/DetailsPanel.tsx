@@ -7,9 +7,10 @@ type DetailsPanelProps = {
   incoming: Edge[]
   depTypes: ReadonlySet<EdgeType>
   dependentTypes: ReadonlySet<EdgeType>
+  resolveName: (id: string) => string
   onToggleDepType: (type: EdgeType) => void
   onToggleDependentType: (type: EdgeType) => void
-  onSelect: (name: string) => void
+  onSelect: (id: string) => void
   onClose: () => void
 }
 
@@ -30,8 +31,9 @@ function Relations(props: {
   title: string
   groups: Map<EdgeType, string[]>
   edgeTypes: ReadonlySet<EdgeType>
+  resolveName: (id: string) => string
   onToggleEdgeType: (type: EdgeType) => void
-  onSelect: (name: string) => void
+  onSelect: (id: string) => void
 }) {
   if (props.groups.size === 0) {
     return null
@@ -39,7 +41,7 @@ function Relations(props: {
   return (
     <section className="details-relations">
       <h3>{props.title}</h3>
-      {[...props.groups.entries()].map(([type, names]) => {
+      {[...props.groups.entries()].map(([type, ids]) => {
         const on = props.edgeTypes.has(type)
         return (
           <div key={type} className={on ? 'rel-group' : 'rel-group off'}>
@@ -52,14 +54,14 @@ function Relations(props: {
               {type}
             </label>
             <ul>
-              {names.map((name) => (
-                <li key={name}>
+              {ids.map((id) => (
+                <li key={id}>
                   <button
                     type="button"
                     className="rel-link"
-                    onClick={() => props.onSelect(name)}
+                    onClick={() => props.onSelect(id)}
                   >
-                    {name}
+                    {props.resolveName(id)}
                   </button>
                 </li>
               ))}
@@ -91,6 +93,8 @@ export function DetailsPanel(props: DetailsPanelProps) {
       </header>
 
       <dl className="details-fields">
+        <dt>Scope</dt>
+        <dd>{unit.scope}</dd>
         <dt>Type</dt>
         <dd>{unit.type}</dd>
         <dt>Active</dt>
@@ -112,6 +116,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
         title="Dependencies"
         groups={deps}
         edgeTypes={props.depTypes}
+        resolveName={props.resolveName}
         onToggleEdgeType={props.onToggleDepType}
         onSelect={props.onSelect}
       />
@@ -119,6 +124,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
         title="Dependents"
         groups={dependents}
         edgeTypes={props.dependentTypes}
+        resolveName={props.resolveName}
         onToggleEdgeType={props.onToggleDependentType}
         onSelect={props.onSelect}
       />

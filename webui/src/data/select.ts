@@ -59,44 +59,44 @@ export function matchUnits(units: Unit[], query: string): Unit[] {
   return units.filter((u) => u.name.toLowerCase().includes(q))
 }
 
-// subgraphByNames keeps only the named units and the edges (of the given
-// types) that run between two kept units.
-export function subgraphByNames(
+// subgraphByIds keeps only the identified units and the edges (of the
+// given types) that run between two kept units.
+export function subgraphByIds(
   graph: Graph,
-  names: ReadonlySet<string>,
+  ids: ReadonlySet<string>,
   edgeTypes: ReadonlySet<EdgeType> = defaultEdgeTypes,
 ): Graph {
-  const units = graph.units.filter((u) => names.has(u.name))
+  const units = graph.units.filter((u) => ids.has(u.id))
   const edges = graph.edges.filter(
-    (e) => edgeTypes.has(e.type) && names.has(e.from) && names.has(e.to),
+    (e) => edgeTypes.has(e.type) && ids.has(e.from) && ids.has(e.to),
   )
   return { units, edges }
 }
 
-// neighborhood returns the named unit plus its directly connected
+// neighborhood returns the identified unit plus its directly connected
 // relatives: dependencies reached by an enabled outgoing edge type, and
 // dependents reached by an enabled incoming edge type. Only the edges
-// incident to the named unit (and enabled) are drawn, so each edge
-// corresponds to one of the panel toggles.
+// incident to the unit (and enabled) are drawn, so each edge corresponds
+// to one of the panel toggles.
 export function neighborhood(
   graph: Graph,
-  name: string,
+  id: string,
   outTypes: ReadonlySet<EdgeType> = new Set(allEdgeTypes),
   inTypes: ReadonlySet<EdgeType> = new Set(allEdgeTypes),
 ): Graph {
-  const names = new Set<string>([name])
+  const ids = new Set<string>([id])
   const edges: Edge[] = []
   for (const e of graph.edges) {
-    if (e.from === name && outTypes.has(e.type)) {
-      names.add(e.to)
+    if (e.from === id && outTypes.has(e.type)) {
+      ids.add(e.to)
       edges.push(e)
     }
-    if (e.to === name && inTypes.has(e.type)) {
-      names.add(e.from)
+    if (e.to === id && inTypes.has(e.type)) {
+      ids.add(e.from)
       edges.push(e)
     }
   }
-  const units = graph.units.filter((u) => names.has(u.name))
+  const units = graph.units.filter((u) => ids.has(u.id))
   return { units, edges }
 }
 

@@ -6,7 +6,9 @@ export type Graph = {
 }
 
 export type Unit = {
+  id: string
   name: string
+  scope: string
   type: string
   description: string
   loadState: string

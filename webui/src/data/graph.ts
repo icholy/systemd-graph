@@ -37,7 +37,9 @@ function parseUnit(raw: unknown, i: number): Unit {
   }
   const ctx = `units[${i}]`
   return {
+    id: str(raw, 'id', ctx),
     name: str(raw, 'name', ctx),
+    scope: str(raw, 'scope', ctx),
     type: str(raw, 'type', ctx),
     description: str(raw, 'description', ctx),
     loadState: str(raw, 'loadState', ctx),
