@@ -1,44 +1,80 @@
 .app {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
   background: #0d1117;
   color: #c9d1d9;
   font-family: system-ui, sans-serif;
 }
 
-.toolbar {
+.sidebar {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid #30363d;
+  flex-direction: column;
+  width: 320px;
+  flex-shrink: 0;
+  border-right: 1px solid #30363d;
 }
 
-.toolbar .title {
-  font-weight: 600;
-  margin-right: 8px;
-}
-
-.toolbar button {
-  background: #21262d;
+.search {
+  margin: 8px;
+  padding: 6px 10px;
+  background: #0d1117;
   color: #c9d1d9;
   border: 1px solid #30363d;
   border-radius: 6px;
-  padding: 4px 10px;
-  cursor: pointer;
+  font-size: 13px;
+  outline: none;
 }
 
-.toolbar button.active {
-  background: #1f6feb;
+.search:focus {
   border-color: #1f6feb;
-  color: #fff;
 }
 
-.toolbar .stats {
-  margin-left: auto;
-  font-size: 12px;
+.list-meta {
+  padding: 0 12px 6px;
+  font-size: 11px;
   color: #8b949e;
+}
+
+.unit-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.unit-list-inner {
+  position: relative;
+  width: 100%;
+}
+
+.unit-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.unit-row:hover {
+  background: #161b22;
+}
+
+.unit-row .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.unit-row .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .canvas {

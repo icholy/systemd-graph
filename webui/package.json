@@ -13,6 +13,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.14.2",
     "cytoscape": "^3.34.0",
     "cytoscape-dagre": "^4.0.0",
     "react": "^19.2.6",

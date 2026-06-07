@@ -1,4 +1,4 @@
-import type { Graph, EdgeType } from './types'
+import type { Graph, Unit, EdgeType } from './types'
 
 // Default view: the units people actually reason about, with requirement
 // edges only. Ordering (After) and Conflicts are excluded by default
@@ -32,6 +32,30 @@ export function filterGraph(graph: Graph, opts: FilterOptions = {}): Graph {
   const kept = new Set(units.map((u) => u.name))
   const edges = graph.edges.filter(
     (e) => edgeTypes.has(e.type) && kept.has(e.from) && kept.has(e.to),
+  )
+  return { units, edges }
+}
+
+// matchUnits returns the units whose name contains the query
+// (case-insensitive). An empty query matches everything.
+export function matchUnits(units: Unit[], query: string): Unit[] {
+  const q = query.trim().toLowerCase()
+  if (q === '') {
+    return units
+  }
+  return units.filter((u) => u.name.toLowerCase().includes(q))
+}
+
+// subgraphByNames keeps only the named units and the edges (of the given
+// types) that run between two kept units.
+export function subgraphByNames(
+  graph: Graph,
+  names: ReadonlySet<string>,
+  edgeTypes: ReadonlySet<EdgeType> = defaultEdgeTypes,
+): Graph {
+  const units = graph.units.filter((u) => names.has(u.name))
+  const edges = graph.edges.filter(
+    (e) => edgeTypes.has(e.type) && names.has(e.from) && names.has(e.to),
   )
   return { units, edges }
 }
