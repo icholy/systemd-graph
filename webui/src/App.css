@@ -26,6 +26,38 @@
   border-right: 1px solid #30363d;
 }
 
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #30363d;
+}
+
+.app-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.refresh-btn {
+  background: #21262d;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #30363d;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .search {
   margin: 8px;
   padding: 6px 10px;

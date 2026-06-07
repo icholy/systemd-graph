@@ -54,7 +54,13 @@ function addToSet<T>(
   })
 }
 
-export function Explorer({ full }: { full: Graph }) {
+type ExplorerProps = {
+  full: Graph
+  refreshing: boolean
+  onRefresh: () => void
+}
+
+export function Explorer({ full, refreshing, onRefresh }: ExplorerProps) {
   const typeCounts = useMemo(() => {
     const m = new Map<string, number>()
     for (const u of full.units) {
@@ -152,6 +158,17 @@ export function Explorer({ full }: { full: Graph }) {
   return (
     <div className="app">
       <aside className="sidebar">
+        <div className="sidebar-header">
+          <span className="app-title">systemd-graph</span>
+          <button
+            type="button"
+            className="refresh-btn"
+            onClick={onRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
         <ScopeFilter
           scopes={allScopes}
           counts={scopeCounts}

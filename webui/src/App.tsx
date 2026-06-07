@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { parseGraph } from './data/graph'
 import type { Graph } from './data/types'
 import { Explorer } from './Explorer'
@@ -7,10 +7,11 @@ import './App.css'
 function App() {
   const [graph, setGraph] = useState<Graph | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/snapshot')
+  const load = useCallback(() => {
+    setRefreshing(true)
+    return fetch('/api/snapshot')
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`)
@@ -18,27 +19,31 @@ function App() {
         return res.json()
       })
       .then((data) => {
-        if (!cancelled) {
-          setGraph(parseGraph(data))
-        }
+        setGraph(parseGraph(data))
+        setError(null)
       })
       .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err))
-        }
+        setError(err instanceof Error ? err.message : String(err))
       })
-    return () => {
-      cancelled = true
-    }
+      .finally(() => {
+        setRefreshing(false)
+      })
   }, [])
 
-  if (error !== null) {
-    return <div className="app-status">Failed to load snapshot: {error}</div>
-  }
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  // Only block the whole screen on the initial load; later failures keep
+  // the last good graph on screen.
   if (graph === null) {
+    if (error !== null) {
+      return <div className="app-status">Failed to load snapshot: {error}</div>
+    }
     return <div className="app-status">Loading...</div>
   }
-  return <Explorer full={graph} />
+
+  return <Explorer full={graph} refreshing={refreshing} onRefresh={load} />
 }
 
 export default App
