@@ -11,6 +11,7 @@ export function CytoscapeView(props: GraphViewProps) {
   const { graph, selected } = props
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
+  const lastFocusRef = useRef<string | null>(null)
 
   // Keep the latest onSelect reachable from the tap handler without
   // rebuilding the graph when it changes identity.
@@ -107,8 +108,9 @@ export function CytoscapeView(props: GraphViewProps) {
     }
   }, [graph])
 
-  // Highlight and pan/zoom to the selected node when it changes (or after
-  // the graph rebuilds).
+  // Highlight the selected node. The class is re-applied on every graph
+  // rebuild (a new cytoscape instance loses it), but we only pan/zoom when
+  // the selection itself changes -- not on unrelated graph changes.
   useEffect(() => {
     const cy = cyRef.current
     if (cy === null) {
@@ -116,6 +118,7 @@ export function CytoscapeView(props: GraphViewProps) {
     }
     cy.nodes().removeClass('focused')
     if (selected === null || selected === undefined) {
+      lastFocusRef.current = null
       return
     }
     const node = cy.getElementById(selected)
@@ -123,7 +126,10 @@ export function CytoscapeView(props: GraphViewProps) {
       return
     }
     node.addClass('focused')
-    cy.animate({ center: { eles: node }, zoom: 2 }, { duration: 300 })
+    if (lastFocusRef.current !== selected) {
+      cy.animate({ center: { eles: node }, zoom: 2 }, { duration: 300 })
+      lastFocusRef.current = selected
+    }
   }, [selected, graph])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
