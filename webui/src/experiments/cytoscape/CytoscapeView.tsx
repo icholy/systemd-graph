@@ -62,7 +62,7 @@ export function CytoscapeView(props: GraphViewProps) {
             'text-halign': 'right',
             'text-margin-x': 4,
             'text-wrap': 'ellipsis',
-            'text-max-width': '160px',
+            'text-max-width': '140px',
             width: 16,
             height: 16,
           },
@@ -130,7 +130,7 @@ export function CytoscapeView(props: GraphViewProps) {
       name: 'dagre',
       rankDir: 'LR',
       nodeSep: 40,
-      rankSep: 120,
+      rankSep: 220,
       fit: true,
     }
     cy.layout(layout).run()

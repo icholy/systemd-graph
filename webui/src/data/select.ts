@@ -101,14 +101,12 @@ export function neighborhood(
 }
 
 // unitLabel is the short, in-graph label. Device units have long,
-// machine-generated path names, so we prefer their description (or the
-// trailing path segment) and keep the full name for tooltips.
+// machine-generated names (and their descriptions are just the sysfs
+// path), so we use the trailing path segment and keep the full name for
+// tooltips.
 export function unitLabel(unit: Unit): string {
   if (unit.type !== 'device') {
     return unit.name
-  }
-  if (unit.description !== '') {
-    return unit.description
   }
   const base = unit.name.replace(/\.device$/, '')
   const parts = base.split('-')
