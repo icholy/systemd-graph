@@ -140,6 +140,22 @@ export function Explorer({ full, refreshing, onRefresh }: ExplorerProps) {
     scopes,
   ])
 
+  // Identifies the user-chosen view; when it's unchanged across a graph
+  // change, the graph rebuild is a background refresh and the viewport is
+  // preserved instead of refit.
+  const fitKey = useMemo(
+    () =>
+      JSON.stringify({
+        selected,
+        query: debouncedQuery,
+        unitTypes: [...unitTypes].sort(),
+        scopes: [...scopes].sort(),
+        depTypes: [...depTypes].sort(),
+        dependentTypes: [...dependentTypes].sort(),
+      }),
+    [selected, debouncedQuery, unitTypes, scopes, depTypes, dependentTypes],
+  )
+
   // Details come from the full graph so they stay complete even when the
   // view is filtered down.
   const selectedUnit = useMemo(
@@ -213,6 +229,7 @@ export function Explorer({ full, refreshing, onRefresh }: ExplorerProps) {
         <GraphView
           graph={graph}
           nodeLimit={nodeLimit}
+          fitKey={fitKey}
           selected={selected}
           onSelect={setSelected}
         />
