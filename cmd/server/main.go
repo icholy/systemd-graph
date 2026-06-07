@@ -1,9 +1,12 @@
-// Command server serves the embedded web UI and an on-demand JSON
-// snapshot of the local systemd dependency graph.
+// Command server serves the embedded web UI plus a JSON snapshot of the
+// local systemd dependency graph and an SSE stream of change
+// notifications. The graph is kept up to date incrementally from D-Bus
+// signals.
 package main
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,8 +14,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
-	"github.com/godbus/dbus/v5"
+	"time"
 
 	"github.com/icholy/systemd-graph/internal/systemd"
 	"github.com/icholy/systemd-graph/webui"
@@ -20,11 +22,20 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":8080", "listen address")
-	watch := flag.Bool("watch", false, "log systemd D-Bus events to stderr")
 	flag.Parse()
 
-	if *watch {
-		startWatch()
+	store := systemd.NewStore()
+	ctx := context.Background()
+
+	if sys, err := systemd.ConnectSystem(); err != nil {
+		log.Fatalf("system bus: %v", err)
+	} else if err := sys.Run(ctx, store); err != nil {
+		log.Fatalf("system watch: %v", err)
+	}
+	if user, err := systemd.ConnectUser(); err != nil {
+		log.Printf("skipping user units: %v", err)
+	} else if err := user.Run(ctx, store); err != nil {
+		log.Printf("user watch: %v", err)
 	}
 
 	dist, err := webui.Dist()
@@ -33,7 +44,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/snapshot", handleSnapshot)
+	mux.HandleFunc("GET /api/snapshot", snapshotHandler(store))
+	mux.HandleFunc("GET /api/events", eventsHandler(store))
 	mux.Handle("GET /", http.FileServerFS(dist))
 
 	log.Printf("listening on %s", *addr)
@@ -42,68 +54,64 @@ func main() {
 	}
 }
 
-// startWatch subscribes to the system and (best-effort) user managers and
-// logs every signal, for exploring what events systemd emits.
-func startWatch() {
-	if sys, err := systemd.ConnectSystem(); err != nil {
-		log.Printf("watch: system: %v", err)
-	} else if err := watchClient(sys); err != nil {
-		log.Printf("watch: system: %v", err)
-	}
-	if user, err := systemd.ConnectUser(); err != nil {
-		log.Printf("watch: user: %v", err)
-	} else if err := watchClient(user); err != nil {
-		log.Printf("watch: user: %v", err)
-	}
-}
+// snapshotHandler serves the cached graph, gzipping when the client
+// accepts it.
+func snapshotHandler(store *systemd.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		graph := store.Snapshot()
+		w.Header().Set("Content-Type", "application/json")
 
-func watchClient(c *systemd.Client) error {
-	ch, err := c.Subscribe()
-	if err != nil {
-		return err
-	}
-	go func() {
-		for sig := range ch {
-			logSignal(c.Scope(), sig)
+		var out io.Writer = w
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			w.Header().Set("Content-Encoding", "gzip")
+			gz := gzip.NewWriter(w)
+			defer gz.Close()
+			out = gz
 		}
-	}()
-	return nil
-}
-
-func logSignal(scope string, sig *dbus.Signal) {
-	member := sig.Name[strings.LastIndex(sig.Name, ".")+1:]
-	if member == "PropertiesChanged" && len(sig.Body) >= 2 {
-		iface, _ := sig.Body[0].(string)
-		changed, _ := sig.Body[1].(map[string]dbus.Variant)
-		parts := make([]string, 0, len(changed))
-		for k, v := range changed {
-			parts = append(parts, fmt.Sprintf("%s=%v", k, v.Value()))
+		if err := json.NewEncoder(out).Encode(graph); err != nil {
+			log.Printf("encoding snapshot: %v", err)
 		}
-		log.Printf("[%s] PropertiesChanged %s %s {%s}", scope, sig.Path, iface, strings.Join(parts, ", "))
-		return
 	}
-	log.Printf("[%s] %s %v", scope, member, sig.Body)
 }
 
-// handleSnapshot computes a fresh snapshot on each request, gzipping the
-// (large) JSON response when the client accepts it.
-func handleSnapshot(w http.ResponseWriter, r *http.Request) {
-	graph, err := systemd.Collect()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
+// eventsHandler streams the store generation over SSE; the client
+// re-fetches the snapshot whenever it changes.
+func eventsHandler(store *systemd.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "streaming unsupported", http.StatusInternalServerError)
+			return
+		}
+		h := w.Header()
+		h.Set("Content-Type", "text/event-stream")
+		h.Set("Cache-Control", "no-cache")
+		h.Set("Connection", "keep-alive")
 
-	var out io.Writer = w
-	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-		w.Header().Set("Content-Encoding", "gzip")
-		gz := gzip.NewWriter(w)
-		defer gz.Close()
-		out = gz
-	}
+		ch, cancel := store.Subscribe()
+		defer cancel()
 
-	if err := json.NewEncoder(out).Encode(graph); err != nil {
-		log.Printf("encoding snapshot: %v", err)
+		// Send the current generation immediately so a fresh connection syncs.
+		fmt.Fprintf(w, "data: %d\n\n", store.Generation())
+		flusher.Flush()
+
+		ticker := time.NewTicker(25 * time.Second)
+		defer ticker.Stop()
+		ctx := r.Context()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case gen, ok := <-ch:
+				if !ok {
+					return
+				}
+				fmt.Fprintf(w, "data: %d\n\n", gen)
+				flusher.Flush()
+			case <-ticker.C:
+				fmt.Fprint(w, ": ping\n\n")
+				flusher.Flush()
+			}
+		}
 	}
 }

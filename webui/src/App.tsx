@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { parseGraph } from './data/graph'
 import type { Graph } from './data/types'
 import { Explorer } from './Explorer'
@@ -32,6 +32,27 @@ function App() {
 
   useEffect(() => {
     void load()
+  }, [load])
+
+  // Subscribe to change notifications and re-fetch (debounced) whenever the
+  // server's graph generation advances. EventSource auto-reconnects.
+  const refetchTimer = useRef<number | null>(null)
+  useEffect(() => {
+    const source = new EventSource('/api/events')
+    source.onmessage = () => {
+      if (refetchTimer.current !== null) {
+        clearTimeout(refetchTimer.current)
+      }
+      refetchTimer.current = window.setTimeout(() => {
+        void load()
+      }, 300)
+    }
+    return () => {
+      source.close()
+      if (refetchTimer.current !== null) {
+        clearTimeout(refetchTimer.current)
+      }
+    }
   }, [load])
 
   // Only block the whole screen on the initial load; later failures keep
