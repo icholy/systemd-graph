@@ -11,3 +11,11 @@
 mise install
 mise run dist
 ```
+
+## Run
+
+``` sh
+./bin/server
+```
+
+Open http://localhost:8080
